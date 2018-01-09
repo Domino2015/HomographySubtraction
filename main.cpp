@@ -75,28 +75,63 @@ int main() {
     //由图像1到图像2的投影映射矩阵，求得变换后的四个点
     std::vector<Point2f> imagePoints1_after(imagePoints1.size());
     perspectiveTransform( imagePoints1, imagePoints1_after, homo);
-    cout<<"imagePoints1_after"<<imagePoints1_after<<endl;
+    //cout<<"imagePoints1_after"<<imagePoints1_after<<endl;
 
     //由图像2到图像1的投影映射矩阵，求得变换后的四个点
     std::vector<Point2f> imagePoints2_after(imagePoints1.size());
     perspectiveTransform( imagePoints2, imagePoints2_after, homo1);
-    cout<<imagePoints2_after<<endl;
+    //cout<<imagePoints2_after<<endl;
 
+    std::vector<Point2f> sub_Homography(imagePoints1.size());
+    double sub_Homography_x,sub_Homography_y;
+    double sub_Homography_x_max,sub_Homography_y_max;
     for(int i=0;i<imagePoints1.size();i++)
     {
-        imagePoints1_after[i];
-        imagePoints2_after[i];
-        cout<<imagePoints1_after[i]<<endl;
+
+        sub_Homography_x = sqrt(abs(double(imagePoints2_after[i].x*imagePoints2_after[i].x-imagePoints1_after[i].x*imagePoints1_after[i].x)));
+        sub_Homography_y = sqrt(abs(double(imagePoints1_after[i].y*imagePoints1_after[i].y - imagePoints2_after[i].y*imagePoints2_after[i].y)));
+        //imagePoints2_after[i];
+        //cout<<(float)sub_Homography_x<<endl;
+        sub_Homography[i].x=(float)sub_Homography_x;
+        sub_Homography[i].y=(float)sub_Homography_y;
+
+        if(sub_Homography_x_max-sub_Homography[i].x<0.00001)
+        {
+            sub_Homography_x_max = sub_Homography[i].x;
+        }
+
+        if(sub_Homography_y_max-sub_Homography[i].y <0.00001)
+        {
+            sub_Homography_y_max = sub_Homography[i].y;
+        }
+
     }
+    //cout<< sub_Homography<<endl;
+    cout<<"X坐标轴最大值："<<sub_Homography_x_max<<endl;
+    cout<<"Y坐标轴最大值："<<sub_Homography_y_max<<endl;
+    //归一化
+    std::vector<Point2i> sub_Homography_color(imagePoints1.size());
+    for(int i=0;i<imagePoints1.size();i++)
+    {
+        sub_Homography_color[i].x =(int)round(255*(sub_Homography[i].x/(float)sub_Homography_x_max));
+        sub_Homography_color[i].y =(int)round(255*(sub_Homography[i].y/(float)sub_Homography_y_max));
 
+        //sub_Homography[i].x =255*(sub_Homography[i].x/(float)sub_Homography_x_max);
+        //sub_Homography[i].y =255*(sub_Homography[i].y/(float)sub_Homography_y_max);
+    }
+    //cout<<sub_Homography<<endl;
+    cout<<"经过归一化矩阵："<<endl;
+    cout<<sub_Homography_color<<endl;
 
-
-    //cout<<"imagePoints_1"<<imagePoints_1<<endl;
 
     //等待任意按键按下
     waitKey(0);
     return 0;
 }
+
+
+
+
 
 //RANSAC算法实现
 vector<DMatch> ransac(vector<DMatch> matches, vector<KeyPoint> queryKeyPoint, vector<KeyPoint> trainKeyPoint) {

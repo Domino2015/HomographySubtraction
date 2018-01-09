@@ -45,12 +45,14 @@ int main() {
     Mat img_matches;
     drawMatches(img_1, keypoints_1, img_2, keypoints_2, matches, img_matches);
     //imshow("RANSC_before", img_matches);
-
+    //TODO:这个是是否开启RANSC,具体可以考虑一下？
+/*
     //RANSC误匹配点剔除
     matches = ransac(matches, keypoints_1, keypoints_2);
     Mat img_matches1;
     drawMatches(img_1, keypoints_1, img_2, keypoints_2, matches, img_matches1);
     //imshow("RANSC_after", img_matches1);
+*/
 
     //获得匹配特征点，并提取最优配对
     sort(matches.begin(),matches.end()); //特征点排序
@@ -63,6 +65,8 @@ int main() {
         imagePoints2.push_back(keypoints_2[matches[i].trainIdx].pt);
     }
     cout<<"点个数："<<imagePoints1.size()<<endl;
+
+
     //获取图像1到图像2的投影映射矩阵 尺寸为3*3
     Mat homo=findHomography(imagePoints1,imagePoints2,CV_RANSAC);
     cout<<"【1】->【2】变换矩阵为：\n"<<homo<<endl; //输出映射矩阵
@@ -87,7 +91,7 @@ int main() {
     double sub_Homography_x_max,sub_Homography_y_max;
     for(int i=0;i<imagePoints1.size();i++)
     {
-
+        //TODO:误差分析的函数是否可以选用其他模型？
         sub_Homography_x = sqrt(abs(double(imagePoints2_after[i].x*imagePoints2_after[i].x-imagePoints1_after[i].x*imagePoints1_after[i].x)));
         sub_Homography_y = sqrt(abs(double(imagePoints1_after[i].y*imagePoints1_after[i].y - imagePoints2_after[i].y*imagePoints2_after[i].y)));
         //imagePoints2_after[i];
@@ -120,9 +124,15 @@ int main() {
         //sub_Homography[i].y =255*(sub_Homography[i].y/(float)sub_Homography_y_max);
     }
     //cout<<sub_Homography<<endl;
-    cout<<"经过归一化矩阵："<<endl;
-    cout<<sub_Homography_color<<endl;
-
+    //cout<<"经过归一化矩阵："<<endl;
+    //cout<<sub_Homography_color<<endl;
+    //TODO:归一化的点，具体分为两类：sub_Homography_color[i].x 图像1到图像2 ；sub_Homography_color[i].y 图像2到图像1
+    for(int i=0;i<imagePoints1.size();i++) {
+        circle(img_1, imagePoints1[i], 2, cv::Scalar(sub_Homography_color[i].x,255, 0), 2);
+        circle(img_2, imagePoints2[i], 2, cv::Scalar(sub_Homography_color[i].y, 255, 0), 2);
+    }
+    imshow("[1->2]_sub_Homography",img_1);
+    imshow("[2->1]_sub_Homography",img_2);
 
     //等待任意按键按下
     waitKey(0);

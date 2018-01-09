@@ -88,12 +88,12 @@ int main() {
     //cout<<imagePoints2_after<<endl;
 
     std::vector<Point2f> sub_Homography(imagePoints1.size());
-    double sub_Homography_x,sub_Homography_y;
-    double sub_Homography_x_max,sub_Homography_y_max;
+    double sub_Homography_x,sub_Homography_y,k,b;
+    double sub_Homography_x_max,sub_Homography_x_min,sub_Homography_y_max;
     for(int i=0;i<imagePoints1.size();i++)
     {
         //TODO:误差分析的函数是否可以选用其他模型？
-        sub_Homography_x = sqrt(abs(double(imagePoints2_after[i].x*imagePoints2_after[i].x-imagePoints1_after[i].x*imagePoints1_after[i].x)));
+        sub_Homography_x = double(imagePoints2_after[i].x-imagePoints1[i].x);
         sub_Homography_y = sqrt(abs(double(imagePoints1_after[i].y*imagePoints1_after[i].y - imagePoints2_after[i].y*imagePoints2_after[i].y)));
         //imagePoints2_after[i];
         //cout<<(float)sub_Homography_x<<endl;
@@ -103,6 +103,10 @@ int main() {
         if(sub_Homography_x_max-sub_Homography[i].x<0.00001)
         {
             sub_Homography_x_max = sub_Homography[i].x;
+        }
+        if(sub_Homography_x_min-sub_Homography[i].x >0.00001)
+        {
+            sub_Homography_x_min = sub_Homography[i].x;
         }
 
         if(sub_Homography_y_max-sub_Homography[i].y <0.00001)
@@ -114,11 +118,15 @@ int main() {
     //cout<< sub_Homography<<endl;
     cout<<"X坐标轴最大值："<<sub_Homography_x_max<<endl;
     cout<<"Y坐标轴最大值："<<sub_Homography_y_max<<endl;
+    cout<<"X坐标轴最小值："<<sub_Homography_x_min<<endl;
     //归一化
+    k = 1/(sub_Homography_x_max-sub_Homography_x_min);
+    b = -k*sub_Homography_x_min;
+
     std::vector<Point2i> sub_Homography_color(imagePoints1.size());
     for(int i=0;i<imagePoints1.size();i++)
     {
-        sub_Homography_color[i].x =(int)round(255*(sub_Homography[i].x/(float)sub_Homography_x_max));
+        sub_Homography_color[i].x =(int)round(255*(k*sub_Homography[i].x+b));
         sub_Homography_color[i].y =(int)round(255*(sub_Homography[i].y/(float)sub_Homography_y_max));
 
         //sub_Homography[i].x =255*(sub_Homography[i].x/(float)sub_Homography_x_max);
@@ -131,14 +139,14 @@ int main() {
     //TODO:归一化的点，具体分为两类：sub_Homography_color[i].x 图像1到图像2 ；sub_Homography_color[i].y 图像2到图像1
     for(int i=0;i<imagePoints1.size();i++) {
         circle(img_1, imagePoints1[i], 2, cv::Scalar(sub_Homography_color[i].x,255, 0), 2);
-        circle(img_2, imagePoints2[i], 2, cv::Scalar(sub_Homography_color[i].y, 255, 0), 2);
+        circle(img_2, imagePoints2[i], 2, cv::Scalar(sub_Homography_color[i].y,255, 0), 2);
     }
     imshow("[1->2]_sub_Homography",img_1);
-    imshow("[2->1]_sub_Homography",img_2);
+    //imshow("[2->1]_sub_Homography",img_2);
 
-    Mat M = Mat(img_1.rows, img_1.cols, CV_8UC1,Scalar(17));
+    Mat M = Mat(img_1.rows, img_1.cols, CV_8UC1,Scalar(20));
     for(int i=0;i<imagePoints1.size();i++) {
-
+        M.at<uchar>(imagePoints1[i].y, imagePoints1[i].x)= sub_Homography_color[i].x;
         M.at<uchar>(imagePoints1[i].y+1, imagePoints1[i].x)= sub_Homography_color[i].x;
         M.at<uchar>(imagePoints1[i].y-1, imagePoints1[i].x)= sub_Homography_color[i].x;
         M.at<uchar>(imagePoints1[i].y, imagePoints1[i].x+1)= sub_Homography_color[i].x;
@@ -149,12 +157,12 @@ int main() {
         M.at<uchar>(imagePoints1[i].y-1, imagePoints1[i].x-1)= sub_Homography_color[i].x;
     }
     //cout<<M<<endl;
-
+    imshow("haha",M);
     Mat dst_gauss;
-    GaussianBlur(M,dst_gauss,Size(13,13),0,0);
+    GaussianBlur(M,dst_gauss,Size(7,7),0,0);
     Mat dst_gauss_3 = convertTo3Channels(dst_gauss);
-    //imshow("gauss",dst_gauss_3);
-    imwrite("../sub_output.jpg",dst_gauss);
+    imshow("gauss",dst_gauss_3);
+    //imwrite("../sub_output.jpg",dst_gauss);
     cv::Mat im_color;
     cv::applyColorMap(dst_gauss_3, im_color, cv::COLORMAP_HSV);
     imshow("color",im_color);

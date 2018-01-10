@@ -17,8 +17,8 @@ Mat convertTo3Channels(const Mat& binImg);
 int main() {
 
     //读入图片
-    Mat img_1 = imread("../501.png");
-    Mat img_2 = imread("../502.png");
+    Mat img_1 = imread("../501.PNG");
+    Mat img_2 = imread("../502.PNG");
 
     imshow("img_1", img_1);
     //imshow("img_2", img_2);
@@ -115,11 +115,34 @@ int main() {
         }
 
     }
+    //输出有负值的二维矩阵，用于显示
+    Mat sub_img = Mat(img_1.rows, img_1.cols, CV_8UC1,Scalar(50));
+    for(int i=0;i<imagePoints1.size();i++) {
+        sub_img.at<uchar>(imagePoints1[i].y, imagePoints1[i].x)= sub_Homography[i].x;
+        sub_img.at<uchar>(imagePoints1[i].y+1, imagePoints1[i].x)= sub_Homography[i].x;
+        sub_img.at<uchar>(imagePoints1[i].y-1, imagePoints1[i].x)= sub_Homography[i].x;
+        sub_img.at<uchar>(imagePoints1[i].y, imagePoints1[i].x+1)= sub_Homography[i].x;
+        sub_img.at<uchar>(imagePoints1[i].y, imagePoints1[i].x-1)= sub_Homography[i].x;
+        sub_img.at<uchar>(imagePoints1[i].y+1, imagePoints1[i].x+1)= sub_Homography[i].x;
+        sub_img.at<uchar>(imagePoints1[i].y+1, imagePoints1[i].x-1)= sub_Homography[i].x;
+        sub_img.at<uchar>(imagePoints1[i].y-1, imagePoints1[i].x+1)= sub_Homography[i].x;
+        sub_img.at<uchar>(imagePoints1[i].y-1, imagePoints1[i].x-1)= sub_Homography[i].x;
+        //cout<<sub_Homography[i].x<<"  ";
+    }
     //cout<< sub_Homography<<endl;
-    cout<<"X坐标轴最大值："<<sub_Homography_x_max<<endl;
-    cout<<"Y坐标轴最大值："<<sub_Homography_y_max<<endl;
-    cout<<"X坐标轴最小值："<<sub_Homography_x_min<<endl;
+    //cout<<sub_img<<endl;
+    imshow("sub_img",sub_img);
+    //imwrite("../sub_img.jpg",sub_img);
+    Mat sub_img_gauss;
+    GaussianBlur(sub_img,sub_img_gauss,Size(11,11),0,0);
+    imwrite("../sub_img_gauss.jpg",sub_img_gauss);
+
+
     //归一化
+    cout<<"X坐标轴最大值："<<sub_Homography_x_max<<endl;
+    //cout<<"Y坐标轴最大值："<<sub_Homography_y_max<<endl;
+    cout<<"X坐标轴最小值："<<sub_Homography_x_min<<endl;
+
     k = 1/(sub_Homography_x_max-sub_Homography_x_min);
     b = -k*sub_Homography_x_min;
 
@@ -158,8 +181,9 @@ int main() {
     }
     //cout<<M<<endl;
     imshow("haha",M);
+    //imwrite("../M.jpg",M);
     Mat dst_gauss;
-    GaussianBlur(M,dst_gauss,Size(7,7),0,0);
+    GaussianBlur(M,dst_gauss,Size(11,11),0,0);
     Mat dst_gauss_3 = convertTo3Channels(dst_gauss);
     imshow("gauss",dst_gauss_3);
     //imwrite("../sub_output.jpg",dst_gauss);
@@ -173,14 +197,14 @@ int main() {
     dst_guidedFilters = guidedFilter(M,cloneImage,5,0.01);
     imshow("guidedFilters",dst_guidedFilters);
 */
-    /*
+
     //imshow("finish",M);
 
-    cv::Mat src =imread("../501.png");
-    Mat im_color;
-    cv::applyColorMap(src, im_color, cv::COLORMAP_JET);
-    imshow("color",im_color);
-*/
+    cv::Mat src =imread("../P1010517.JPG");
+    Mat im_color1;
+    cv::applyColorMap(src, im_color1, cv::COLORMAP_JET);
+    //imshow("color_defual",im_color1);
+
     //等待任意按键按下
     waitKey(0);
     return 0;
